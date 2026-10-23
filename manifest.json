@@ -1,0 +1,11 @@
+{
+  "id": "latex-delimiter-fix",
+  "name": "LaTeX Delimiter Fix",
+  "version": "1.1.0",
+  "minAppVersion": "1.5.0",
+  "description": "Repair LaTeX math delimiters in existing notes, selections, and pasted text.",
+  "author": "Atharva Savnerkar",
+  "authorUrl": "https://github.com/Ayush4265",
+  "isDesktopOnly": false
+}
+
