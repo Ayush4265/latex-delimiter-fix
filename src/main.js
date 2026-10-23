@@ -108,7 +108,7 @@ module.exports = class LatexDelimiterFix extends Plugin {
     if (!this.settings.autoPaste || evt.defaultPrevented || !evt.clipboardData || editor.listSelections().length !== 1) return;
     if (evt.clipboardData.files.length) return;
     const pasted = evt.clipboardData.getData('text/plain');
-    if (!pasted || !/\\[[(]/.test(pasted)) return;
+    if (!pasted || (!/\\[[(]/.test(pasted) && !pasted.includes('%'))) return;
     const source = editor.getValue();
     const from = editor.posToOffset(editor.getCursor('from'));
     const to = editor.posToOffset(editor.getCursor('to'));

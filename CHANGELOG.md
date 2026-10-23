@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.1
+
+- Escape numeric percentages in converted math so a bare percent sign cannot swallow the closing delimiter and following Markdown.
+- Repair the same numeric-percent issue in existing dollar-delimited math created by older versions.
+- Apply the repair to pasted dollar math, while preserving escaped percents, ordinary prose, protected code, and explanatory display-math comments.
+- Add regression coverage for a percentage in a table immediately above a heading and list.
+
 ## 1.1.0
 
 - Add a visible ribbon button, settings button, and context menus to repair existing notes.

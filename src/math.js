@@ -6,9 +6,28 @@ function escaped(s, i) {
   return n % 2 === 1;
 }
 
+
+// A bare percent starts a TeX comment. Escape numeric percentages before
+// introducing dollar delimiters, and repair the same mistake in older output.
+// Preserve explanatory comments in multiline display math.
+function numericPercents(tex, display) {
+  const parts = []; let cursor = 0;
+  for (let i = 0; i < tex.length; i++) {
+    if (tex[i] !== '%' || escaped(tex, i)) continue;
+    let previous = i - 1;
+    while (previous >= 0 && /[ \t]/.test(tex[previous])) previous--;
+    if (previous < 0 || !/[0-9]/.test(tex[previous])) continue;
+    const lineEnd = tex.indexOf('\n', i + 1);
+    const tail = tex.slice(i + 1, lineEnd < 0 ? tex.length : lineEnd).trim();
+    if (display && /^[A-Za-z]/.test(tail)) continue;
+    parts.push(tex.slice(cursor, i), '\\%'); cursor = i + 1;
+  }
+  parts.push(tex.slice(cursor)); return parts.join('');
+}
+
 // Build a source mask before finding delimiters. Masked text is never rewritten.
 function protectedMask(s) {
-  const mask = new Uint8Array(s.length);
+  const mask = new Uint8Array(s.length), nativeMath = [];
   const mark = (a, b) => mask.fill(1, a, b);
   let offset = 0, fence = null, yaml = false;
   const lines = s.match(/[^\n]*\n|[^\n]+$/g) || [];
@@ -65,7 +84,12 @@ function protectedMask(s) {
       }
     }
     if (end < 0 && nextTick.has(i)) end = nextTick.get(i);
-    if (end < 0 && dollarEnds.has(i)) end = dollarEnds.get(i);
+    if (end < 0 && dollarEnds.has(i)) {
+      end = dollarEnds.get(i);
+      if (!mask.subarray(i, end).some(Boolean)) {
+        nativeMath.push({ from: i, to: end, display: s.startsWith('$$', i) });
+      }
+    }
     // Protect HTML code/pre blocks and link destinations, including their delimiters.
     if (end < 0 && s[i] === '<') {
       const m = s.slice(i, i + 100).match(/^<(code|pre)\b[^>]*>/i);
@@ -89,7 +113,7 @@ function protectedMask(s) {
     }
     if (end > i) { mark(i, end); i = end; } else i++;
   }
-  return mask;
+  return { mask, nativeMath };
 }
 
 function displayText(s, from, to, raw, nl) {
@@ -120,7 +144,16 @@ function displayText(s, from, to, raw, nl) {
 }
 
 function findEdits(s) {
-  const mask = protectedMask(s), edits = [];
+  const { mask, nativeMath } = protectedMask(s), edits = [];
+  for (const range of nativeMath) {
+    const size = range.display ? 2 : 1;
+    const body = s.slice(range.from + size, range.to - size);
+    const repaired = numericPercents(body, range.display);
+    if (body !== repaired) {
+      const delimiter = range.display ? '$$' : '$';
+      edits.push({ from: range.from, to: range.to, text: delimiter + repaired + delimiter });
+    }
+  }
   const nl = s.includes('\r\n') ? '\r\n' : '\n';
   let pending = null;
   for (let i = 0; i < s.length; i++) {
@@ -134,13 +167,16 @@ function findEdits(s) {
       i++; continue;
     }
     if (!pending || next !== (pending.display ? ']' : ')')) continue;
-    const raw = s.slice(pending.from + 2, i);
+    const raw = numericPercents(s.slice(pending.from + 2, i), pending.display);
     const body = raw.trim();
     const text = !body ? null : pending.display ? displayText(s, pending.from, i + 2, raw, nl) : '$' + body + '$';
-    if (text !== null) edits.push({ from: pending.from, to: i + 2, text });
+    // Don't introduce an inline math span whose closing delimiter would be
+    // hidden by an unsupported non-numeric percent/comment.
+    const unsafeInline = !pending.display && Array.from(raw.matchAll(/%/g)).some(m => !escaped(raw, m.index));
+    if (text !== null && !unsafeInline) edits.push({ from: pending.from, to: i + 2, text });
     pending = null; i++;
   }
-  return edits;
+  return edits.sort((a, b) => a.from - b.from);
 }
 
 function applyEdits(s, edits) {

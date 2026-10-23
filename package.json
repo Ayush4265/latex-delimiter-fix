@@ -1,6 +1,6 @@
 {
   "name": "latex-delimiter-fix",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "description": "Repair LaTeX math delimiters in Obsidian notes.",
   "license": "MIT",
@@ -9,5 +9,7 @@
     "test": "node --test test/*.test.cjs",
     "check": "node build.cjs && node --check main.js && node --test test/*.test.cjs"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  }
 }

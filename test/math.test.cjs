@@ -72,3 +72,26 @@ test('generated varied notes retain code and become stable after repair', () => 
     assert.equal(findEdits(s).length, 2);
   }
 });
+test('numeric percentage before a heading cannot swallow subsequent prose', () => {
+  const source = '| Variable | Value |\n| --- | --- |\n| Neutrophils | \\(>75%\\) |\n\n#### Interpretation\n\n- **Low score:** Observe.\n- **High score $\\ge 9$ (or $\\ge 8$):** Act.\n';
+  const expected = source.replace('\\(>75%\\)', '$>75\\%$');
+  assert.equal(fix(source), expected);
+  assert.equal(fix(expected), expected);
+});
+test('old plugin numeric percentages in existing dollar math are repaired', () => {
+  assert.equal(fix('Neutrophils $>75%$, accuracy $>95%$; plain 90%.'), 'Neutrophils $>75\\%$, accuracy $>95\\%$; plain 90%.');
+});
+test('escaped percentages are not double escaped', () => {
+  assert.equal(fix(String.raw`\(>75\%\) and $>95\%$`), String.raw`$>75\%$ and $>95\%$`);
+});
+test('single line display percentage is repaired', () => {
+  assert.equal(fix(String.raw`\[p = 75%\]`), '$$\np = 75\\%\n$$');
+});
+test('genuine multiline TeX comments are retained', () => {
+  const s = '\\[\nx = 1 % intentional comment\n+ 2\n\\]';
+  assert.equal(fix(s), '$$\nx = 1 % intentional comment\n+ 2\n$$');
+});
+test('percentages in protected code or ordinary prose stay unchanged', () => {
+  const s = 'Plain 75%. `\\(75%\\)` and `$75%$`\n\n```tex\n\\(75%\\)\n$75%$\n```';
+  assert.equal(fix(s), s);
+});

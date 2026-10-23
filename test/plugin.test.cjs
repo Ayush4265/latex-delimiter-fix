@@ -118,3 +118,17 @@ test('missing active note gives a useful message', async () => {
   const f = await setup(); f.plugin.app.workspace.getActiveViewOfType = () => null;
   await f.plugin.repairActiveNote(); assert.match(f.notices.at(-1), /Open a Markdown note/);
 });
+test('pasted numeric percentages use safe TeX escaping', async () => {
+  const f = await setup(), e = editorFor('');
+  assert.equal(paste(f, e, '\\(>75%\\)'), true);
+  assert.equal(e.getValue(), '$>75\\%$');
+});
+test('pasted dollar math from older versions is repaired too', async () => {
+  const f = await setup(), e = editorFor('');
+  assert.equal(paste(f, e, '$>75%$'), true);
+  assert.equal(e.getValue(), '$>75\\%$');
+});
+test('ordinary pasted percentage does not hijack clipboard handling', async () => {
+  const f = await setup();
+  assert.equal(paste(f, editorFor(''), 'Plain 75%.'), false);
+});
