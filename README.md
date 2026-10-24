@@ -46,6 +46,8 @@ $$
 $$
 ```
 
+Inline math is repaired inside italic/bold text and nested lists, including four-space indentation used for child list items. Actual code indentation is interpreted relative to the list content.
+
 The converter also handles standalone display blocks in basic quotes and lists, and display math embedded in ordinary prose by separating it into a block.
 
 ## What stays unchanged

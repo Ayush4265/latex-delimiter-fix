@@ -33,7 +33,8 @@ function numericPercents(tex, display) {
 function protectedMask(s) {
   const mask = new Uint8Array(s.length), nativeMath = [];
   const mark = (a, b) => mask.fill(1, a, b);
-  let offset = 0, fence = null, yaml = false;
+  let offset = 0, fence = null, yaml = false, quoteDepth = 0;
+  let lists = [];
   const lines = s.match(/[^\n]*\n|[^\n]+$/g) || [];
   for (let index = 0; index < lines.length; index++) {
     const line = lines[index], bare = line.replace(/\r?\n$/, '');
@@ -41,15 +42,60 @@ function protectedMask(s) {
     if (yaml) {
       mark(offset, offset + line.length);
       if (index > 0 && /^(---|\.\.\.)\s*$/.test(bare)) yaml = false;
-    } else {
-      const m = bare.match(/^(?: {0,3}> ?)* {0,3}(?:[-+*] |\d+[.)] )?(`{3,}|~{3,})(.*)$/);
-      if (fence) {
+      offset += line.length; continue;
+    }
+    // Expand tabs only for classification. Original source bytes are untouched.
+    let expanded = '', column = 0;
+    for (const char of bare) {
+      if (char === '\t') {
+        const size = 4 - column % 4; expanded += ' '.repeat(size); column += size;
+      } else { expanded += char; column++; }
+    }
+    let depth = 0, quote;
+    while ((quote = expanded.match(/^ {0,3}> ?/))) {
+      depth++; expanded = expanded.slice(quote[0].length);
+    }
+    const indent = expanded.match(/^ */)[0].length;
+    const content = expanded.slice(indent);
+    const blank = !content.trim();
+    if (depth !== quoteDepth) { lists = []; quoteDepth = depth; }
+    // Keep a fence protected through malformed indentation. Its contents
+    // must not create fake list contexts or accidentally expose TeX as prose.
+    if (fence && (blank || depth === fence.depth)) {
+      mark(offset, offset + line.length);
+      const close = content.match(/^(\x60{3,}|~{3,})\s*$/);
+      if (close && indent - fence.base <= 3 && close[1][0] === fence.char && close[1].length >= fence.size) fence = null;
+      offset += line.length; continue;
+    }
+    if (fence) fence = null;
+    if (blank) { offset += line.length; continue; }
+    // Indentation is relative to the current list's content column, not to
+    // the document margin. Four spaces can be ordinary nested list content.
+    while (lists.length && indent < lists[lists.length - 1].content) lists.pop();
+    let base = lists.length ? lists[lists.length - 1].content : 0;
+    if (indent - base >= 4) {
+      mark(offset, offset + line.length);
+      offset += line.length; continue;
+    }
+    let body = content;
+    const item = content.match(/^([-+*]|[0-9]{1,9}[.)])( +|$)(.*)$/);
+    const thematicBreak = /^(?:\* *){3,}$|^(?:- *){3,}$|^(?:_ *){3,}$/.test(content);
+    if (item && !thematicBreak) {
+      const padding = item[2].length || 1;
+      const width = item[1].length + (padding <= 4 ? padding : 1);
+      base = indent + width;
+      lists.push({ content: base });
+      // Five or more spaces after a marker can introduce indented code.
+      if (padding > 4) {
         mark(offset, offset + line.length);
-        if (m && m[1][0] === fence.char && m[1].length >= fence.size && !m[2].trim()) fence = null;
-      } else if (m && !(m[1][0] === '`' && m[2].includes('`'))) {
-        fence = { char: m[1][0], size: m[1].length };
-        mark(offset, offset + line.length);
-      } else if (/^(?: {4}|\t)/.test(bare)) mark(offset, offset + line.length);
+        offset += line.length; continue;
+      }
+      body = item[3];
+    } else if (thematicBreak) lists = [];
+    const open = body.match(/^(\x60{3,}|~{3,})(.*)$/);
+    if (open && !(open[1][0] === String.fromCharCode(96) && open[2].includes(String.fromCharCode(96)))) {
+      fence = { char: open[1][0], size: open[1].length, depth, base };
+      mark(offset, offset + line.length);
     }
     offset += line.length;
   }
@@ -195,6 +241,7 @@ function editsInRange(s, from, to) {
   return findEdits(s).filter(e => e.from >= from && e.to <= to);
 }
 module.exports = { findEdits, applyEdits, editsInRange };
+
 
 
 return module.exports; })();

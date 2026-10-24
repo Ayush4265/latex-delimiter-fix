@@ -95,3 +95,37 @@ test('percentages in protected code or ordinary prose stay unchanged', () => {
   const s = 'Plain 75%. `\\(75%\\)` and `$75%$`\n\n```tex\n\\(75%\\)\n$75%$\n```';
   assert.equal(fix(s), s);
 });
+test('italic math inside four-space nested lists is repaired', () => {
+  const s = '- **Parent:**\n    - _Location (Size \\(<2\\text{ cm}\\)):_ Action.\n    - _Other size \\(>2\\text{ cm}\\):_ Action.';
+  const expected = s.replace('\\(<2\\text{ cm}\\)', '$<2\\text{ cm}$').replace('\\(>2\\text{ cm}\\)', '$>2\\text{ cm}$');
+  assert.equal(fix(s), expected);
+  assert.equal(fix(expected), expected);
+});
+test('bold nested list math is repaired', () => {
+  assert.equal(fix('- Parent\n    - **Value \\(x\\)**'), '- Parent\n    - **Value $x$**');
+});
+test('nested ordered list math is repaired', () => {
+  assert.equal(fix('1. Parent\n    1. _Value \\(x\\)_'), '1. Parent\n    1. _Value $x$_');
+});
+test('tab-indented nested list math is repaired', () => {
+  assert.equal(fix('- Parent\n\t- _Value \\(x\\)_'), '- Parent\n\t- _Value $x$_');
+});
+test('nested list continuation paragraphs are repaired', () => {
+  assert.equal(fix('- Parent\n    - Child\n\n      _Value \\(x\\)_'), '- Parent\n    - Child\n\n      _Value $x$_');
+});
+test('deeply nested list math is repaired', () => {
+  assert.equal(fix('- Parent\n    - Child\n        - _Value \\(x\\)_'), '- Parent\n    - Child\n        - _Value $x$_');
+});
+test('quote nested list math is repaired', () => {
+  assert.equal(fix('> - Parent\n>     - _Value \\(x\\)_'), '> - Parent\n>     - _Value $x$_');
+});
+for (const [name, s] of [
+  ['root indented fake list', '    - _Value \\(x\\)_'],
+  ['root tab fake list', '\t- _Value \\(x\\)_'],
+  ['indented code inside list', '- Parent\n\n      _Value \\(x\\)_'],
+  ['indented code inside nested list', '- Parent\n    - Child\n\n          _Value \\(x\\)_'],
+  ['fenced code inside nested list', '- Parent\n    - Child\n\n      ```tex\n      _Value \\(x\\)_\n      ```'],
+  ['fence on list marker', '- ```tex\n  _Value \\(x\\)_\n  ```'],
+  ['quote code', '>     _Value \\(x\\)_'],
+  ['parent math after code stays independent', '- Parent\n\n      \\(code\\)\n\nOutside.\n\n    \\(code again\\)']
+]) test('list/code safety: ' + name, () => assert.equal(fix(s), s));

@@ -1,0 +1,44 @@
+name: Release plugin
+on:
+  push:
+    branches: [main]
+    paths:
+      - manifest.json
+      - .github/workflows/release.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node build.cjs
+      - run: node --check main.js
+      - run: node --test test/*.test.cjs
+      - run: git diff --exit-code -- main.js
+      - name: Publish version from manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION=$(node -e 'const v=require("./manifest.json").version;if(!/^\d+\.\d+\.\d+$/.test(v))process.exit(1);process.stdout.write(v)')
+          if gh release view "$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $VERSION already exists; leaving it unchanged."
+            exit 0
+          fi
+          mkdir -p release/latex-delimiter-fix
+          cp main.js manifest.json README.md LICENSE release/latex-delimiter-fix/
+          (cd release && zip -r "latex-delimiter-fix-$VERSION.zip" latex-delimiter-fix)
+          gh release create "$VERSION" main.js manifest.json "release/latex-delimiter-fix-$VERSION.zip" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "$VERSION — Fix math inside nested lists" \
+            --notes-file RELEASE_NOTES.md \
+            --latest

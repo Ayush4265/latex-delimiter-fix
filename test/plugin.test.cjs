@@ -132,3 +132,24 @@ test('ordinary pasted percentage does not hijack clipboard handling', async () =
   const f = await setup();
   assert.equal(paste(f, editorFor(''), 'Plain 75%.'), false);
 });
+test('repair command fixes italic math inside a nested list', async () => {
+  const source = '- Parent\n    - _Size \\(<2\\text{ cm}\\):_ Action.';
+  const f = await setup({source});
+  await f.commands['repair-current-note'].callback();
+  assert.equal(f.view.editor.getValue(), '- Parent\n    - _Size $<2\\text{ cm}$:_ Action.');
+  assert.equal(f.view.editor.transactions, 1);
+});
+test('paste inherits surrounding list context for italic nested math', async () => {
+  const f = await setup();
+  const prefix = '- Parent\n';
+  const e = editorFor(prefix, prefix.length);
+  assert.equal(paste(f, e, '    - _Size \\(x\\)_'), true);
+  assert.equal(e.getValue(), '- Parent\n    - _Size $x$_');
+});
+test('selection repair preserves nested list italics', async () => {
+  const f = await setup();
+  const source = '- Parent\n    - _Size \\(x\\)_';
+  const e = editorFor(source, source.indexOf('\\('), source.indexOf('\\)') + 2);
+  f.commands['repair-selection'].editorCallback(e);
+  assert.equal(e.getValue(), '- Parent\n    - _Size $x$_');
+});

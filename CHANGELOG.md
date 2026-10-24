@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.2
+
+- Distinguish nested list indentation from actual indented code.
+- Repair inline math inside italic and bold list text, ordered lists, tab-indented lists, and list continuation paragraphs.
+- Keep true indented code and nested fences protected, including code inside quotes.
+- Cover the same behavior in note repair, selection repair, and paste handling.
+- Expand automated regression coverage to 95 tests.
+
 ## 1.1.1
 
 - Escape numeric percentages in converted math so a bare percent sign cannot swallow the closing delimiter and following Markdown.
