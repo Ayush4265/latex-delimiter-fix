@@ -1,336 +1,73 @@
 # LaTeX Delimiter Fix
 
-Repair unrendered LaTeX math in **existing notes**, selected text, and future pastes. Converts `\[ ... \]` to Obsidian display math (`$$`) and `\( ... \)` to inline math (`$`). This is an independent community plugin.
+Repair unrendered LaTeX math in existing notes, selections, and pasted text. Converts `\[ ... \]` to display math (`$$`) and `\( ... \)` to inline math (`$`). Also escapes numeric percentages in math to prevent a bare `%` from commenting out a closing delimiter.
 
-## Repair existing text
+Author: **Atharva Savnerkar** ([Ayush4265](https://github.com/Ayush4265)). This is an independent community plugin.
 
-No need to copy and paste the note again:
+## Repair existing notes
 
 - Click the **sigma (Σ) ribbon icon**, labelled **Fix math in current note**.
-- Or open the command palette and run **LaTeX Delimiter Fix: Repair math in current note**.
-- Or right-click in the editor and choose **Fix math in current note**.
-- For a passage, select it and run **Repair math in selection** or use the editor context menu.
-- The plugin settings also have a **Fix math** button.
+- Or run **LaTeX Delimiter Fix: Repair math in current note** from the command palette.
+- Or use **Fix math in current note** in the editor context menu or plugin settings.
+- To repair only a passage, select it and run **Repair math in selection**.
 
-The current-note command works in editing mode and Reading view. Only the active note is repaired. Selection repair only changes complete expressions fully inside a selection and checks the surrounding note for code/math context.
+The current-note command works in editing mode and Reading view. Only the active note is changed. Selection repair checks the surrounding note and changes complete expressions fully inside the selection.
 
-In editing mode, use **Undo** to reverse a repair. In Reading view, use **LaTeX Delimiter Fix: Revert last note repair**. The latter stores one repair in memory for the current session and refuses to revert if the note has changed. It is not a persistent backup or vault history.
+In editing mode, use **Undo**. For Reading view repairs, run **Revert last note repair**. The revert command stores one repair in memory for the session and refuses to overwrite later edits. It is not a persistent backup.
 
-Use Reading view or Live Preview with your cursor outside the equation to see rendered math. Source mode intentionally shows raw syntax.
+Use Reading view or Live Preview with the cursor outside the formula to see rendered math. Source mode intentionally shows raw syntax.
 
-## Automatic paste repair
+## Nested lists, italics, and percentages
 
-Enabled by default. Disable **Fix LaTeX on paste** in the plugin settings if desired. When conversion is needed, the plugin inserts plain-text Markdown from the clipboard, so rich clipboard formatting is not retained. Images, file pastes, multiple-cursor pastes, and pastes already handled by another plugin are left alone. Existing text elsewhere in the note is not changed by pasting.
-
-## Install or update manually
-
-1. Download `main.js` and `manifest.json` from the [latest release](https://github.com/Ayush4265/latex-delimiter-fix/releases/latest), or extract the plugin ZIP.
-2. Put them in `<your vault>/.obsidian/plugins/latex-delimiter-fix/`. When updating, replace the existing files.
-3. Restart/reload Obsidian, then enable **LaTeX Delimiter Fix** in **Settings > Community plugins**. For an update, toggling the plugin off and on also reloads it.
-
-Requires Obsidian 1.5.0 or later. No build step is needed for installation.
-
-## Example
+Version 1.1.2 repairs inline math inside italic and bold text in nested lists, including four-space/tab indentation and list continuation paragraphs. Code indentation is interpreted relative to the list content, so actual code remains protected.
 
 Before:
 
 ```text
-\[\text{Sequence} = \text{First} \longrightarrow \text{Next} \longrightarrow \text{Last}\]
+- Parent
+    - _Size \(<2\text{ cm}\):_ Description.
+    - Accuracy \(>75%\).
 ```
 
 After:
 
 ```text
-$$
-\text{Sequence} = \text{First} \longrightarrow \text{Next} \longrightarrow \text{Last}
-$$
+- Parent
+    - _Size $<2\text{ cm}$:_ Description.
+    - Accuracy $>75\%$.
 ```
 
-Inline math is repaired inside italic/bold text and nested lists, including four-space indentation used for child list items. Actual code indentation is interpreted relative to the list content.
-
-The converter also handles standalone display blocks in basic quotes and lists, and display math embedded in ordinary prose by separating it into a block.
-
-## What stays unchanged
-
-The converter skips fenced and indented code, matched inline code, YAML properties, HTML/Obsidian comments, HTML `code`/`pre` blocks, wiki links, Markdown link destinations, and existing matched dollar-delimited math (except repairing numeric percentages such as `$75%# LaTeX Delimiter Fix
-
-Repair unrendered LaTeX math in **existing notes**, selected text, and future pastes. Converts `\[ ... \]` to Obsidian display math (`$$`) and `\( ... \)` to inline math (`$`). This is an independent community plugin.
-
-## Repair existing text
-
-No need to copy and paste the note again:
-
-- Click the **sigma (Σ) ribbon icon**, labelled **Fix math in current note**.
-- Or open the command palette and run **LaTeX Delimiter Fix: Repair math in current note**.
-- Or right-click in the editor and choose **Fix math in current note**.
-- For a passage, select it and run **Repair math in selection** or use the editor context menu.
-- The plugin settings also have a **Fix math** button.
-
-The current-note command works in editing mode and Reading view. Only the active note is repaired. Selection repair only changes complete expressions fully inside a selection and checks the surrounding note for code/math context.
-
-In editing mode, use **Undo** to reverse a repair. In Reading view, use **LaTeX Delimiter Fix: Revert last note repair**. The latter stores one repair in memory for the current session and refuses to revert if the note has changed. It is not a persistent backup or vault history.
-
-Use Reading view or Live Preview with your cursor outside the equation to see rendered math. Source mode intentionally shows raw syntax.
+The numeric-percent correction also applies to existing dollar math from older versions. Plain-text percentages and already escaped percentages stay unchanged. Explanatory comments in multiline display math are preserved.
 
 ## Automatic paste repair
 
-Enabled by default. Disable **Fix LaTeX on paste** in the plugin settings if desired. When conversion is needed, the plugin inserts plain-text Markdown from the clipboard, so rich clipboard formatting is not retained. Images, file pastes, multiple-cursor pastes, and pastes already handled by another plugin are left alone. Existing text elsewhere in the note is not changed by pasting.
+Enabled by default; disable **Fix LaTeX on paste** in plugin settings if desired. When conversion is needed, the plugin inserts plain-text Markdown, so rich clipboard formatting is not retained. Images, file pastes, multiple-cursor pastes, and pastes already handled by another plugin are left alone. Existing text elsewhere in the note is not repaired by a paste.
 
-## Install or update manually
+## Install or update
 
-1. Download `main.js` and `manifest.json` from the [latest release](https://github.com/Ayush4265/latex-delimiter-fix/releases/latest), or extract the plugin ZIP.
-2. Put them in `<your vault>/.obsidian/plugins/latex-delimiter-fix/`. When updating, replace the existing files.
-3. Restart/reload Obsidian, then enable **LaTeX Delimiter Fix** in **Settings > Community plugins**. For an update, toggling the plugin off and on also reloads it.
+Download the [latest GitHub release](https://github.com/Ayush4265/latex-delimiter-fix/releases/latest). Put `main.js` and `manifest.json` in `<your vault>/.obsidian/plugins/latex-delimiter-fix/`, replacing the old files. Alternatively, extract the plugin ZIP into `.obsidian/plugins/`.
 
-Requires Obsidian 1.5.0 or later. No build step is needed for installation.
+Restart/reload Obsidian, or toggle the plugin off and on. Enable **LaTeX Delimiter Fix** under Community plugins. Requires Obsidian 1.5.0 or later.
 
-## Example
+## Protected content and limits
 
-Before:
+The scanner protects fenced/indented code, matched inline code, YAML properties, HTML/Obsidian comments, HTML code/pre blocks, wiki links, Markdown link destinations, and existing matched dollar math apart from numeric-percent repairs. Incomplete delimiter pairs are left alone.
 
-```text
-\[\text{Sequence} = \text{First} \longrightarrow \text{Next} \longrightarrow \text{Last}\]
-```
+Inline expressions must close on the same line. Complex nested Markdown, display math crossing blank paragraphs, and display math inside table cells may be skipped. Literal paired delimiters in prose can be indistinguishable from intended math. Review changes and use Undo when needed.
 
-After:
+This is a conservative source scanner, not a complete Markdown or TeX parser. It does not repair arbitrary invalid TeX, install LaTeX packages, or wrap long equations automatically. Expression-edge whitespace and list/quote prefixes may be normalized during display conversion.
 
-```text
-$$
-\text{Sequence} = \text{First} \longrightarrow \text{Next} \longrightarrow \text{Last}
-$$
-```
+## Validation
 
-The converter also handles standalone display blocks in basic quotes and lists, and display math embedded in ordinary prose by separating it into a block.
-
-## What stays unchanged
-
-The converter skips fenced and indented code, matched inline code, YAML properties, HTML/Obsidian comments, HTML `code`/`pre` blocks, wiki links, Markdown link destinations,  to `$75\%# LaTeX Delimiter Fix
-
-Repair unrendered LaTeX math in **existing notes**, selected text, and future pastes. Converts `\[ ... \]` to Obsidian display math (`$$`) and `\( ... \)` to inline math (`$`). This is an independent community plugin.
-
-## Repair existing text
-
-No need to copy and paste the note again:
-
-- Click the **sigma (Σ) ribbon icon**, labelled **Fix math in current note**.
-- Or open the command palette and run **LaTeX Delimiter Fix: Repair math in current note**.
-- Or right-click in the editor and choose **Fix math in current note**.
-- For a passage, select it and run **Repair math in selection** or use the editor context menu.
-- The plugin settings also have a **Fix math** button.
-
-The current-note command works in editing mode and Reading view. Only the active note is repaired. Selection repair only changes complete expressions fully inside a selection and checks the surrounding note for code/math context.
-
-In editing mode, use **Undo** to reverse a repair. In Reading view, use **LaTeX Delimiter Fix: Revert last note repair**. The latter stores one repair in memory for the current session and refuses to revert if the note has changed. It is not a persistent backup or vault history.
-
-Use Reading view or Live Preview with your cursor outside the equation to see rendered math. Source mode intentionally shows raw syntax.
-
-## Automatic paste repair
-
-Enabled by default. Disable **Fix LaTeX on paste** in the plugin settings if desired. When conversion is needed, the plugin inserts plain-text Markdown from the clipboard, so rich clipboard formatting is not retained. Images, file pastes, multiple-cursor pastes, and pastes already handled by another plugin are left alone. Existing text elsewhere in the note is not changed by pasting.
-
-## Install or update manually
-
-1. Download `main.js` and `manifest.json` from the [latest release](https://github.com/Ayush4265/latex-delimiter-fix/releases/latest), or extract the plugin ZIP.
-2. Put them in `<your vault>/.obsidian/plugins/latex-delimiter-fix/`. When updating, replace the existing files.
-3. Restart/reload Obsidian, then enable **LaTeX Delimiter Fix** in **Settings > Community plugins**. For an update, toggling the plugin off and on also reloads it.
-
-Requires Obsidian 1.5.0 or later. No build step is needed for installation.
-
-## Example
-
-Before:
-
-```text
-\[\text{Sequence} = \text{First} \longrightarrow \text{Next} \longrightarrow \text{Last}\]
-```
-
-After:
-
-```text
-$$
-\text{Sequence} = \text{First} \longrightarrow \text{Next} \longrightarrow \text{Last}
-$$
-```
-
-The converter also handles standalone display blocks in basic quotes and lists, and display math embedded in ordinary prose by separating it into a block.
-
-## What stays unchanged
-
-The converter skips fenced and indented code, matched inline code, YAML properties, HTML/Obsidian comments, HTML `code`/`pre` blocks, wiki links, Markdown link destinations, ). An expression cannot cross a protected region. Incomplete pairs are left alone. TeX content is preserved apart from whitespace at expression edges and container prefixes.
-
-## Limits
-
-This repairs **delimiters** and escapes bare numeric percentage signs in math, such as `\(>75%\)` to `$>75\%# LaTeX Delimiter Fix
-
-Repair unrendered LaTeX math in **existing notes**, selected text, and future pastes. Converts `\[ ... \]` to Obsidian display math (`$$`) and `\( ... \)` to inline math (`$`). This is an independent community plugin.
-
-## Repair existing text
-
-No need to copy and paste the note again:
-
-- Click the **sigma (Σ) ribbon icon**, labelled **Fix math in current note**.
-- Or open the command palette and run **LaTeX Delimiter Fix: Repair math in current note**.
-- Or right-click in the editor and choose **Fix math in current note**.
-- For a passage, select it and run **Repair math in selection** or use the editor context menu.
-- The plugin settings also have a **Fix math** button.
-
-The current-note command works in editing mode and Reading view. Only the active note is repaired. Selection repair only changes complete expressions fully inside a selection and checks the surrounding note for code/math context.
-
-In editing mode, use **Undo** to reverse a repair. In Reading view, use **LaTeX Delimiter Fix: Revert last note repair**. The latter stores one repair in memory for the current session and refuses to revert if the note has changed. It is not a persistent backup or vault history.
-
-Use Reading view or Live Preview with your cursor outside the equation to see rendered math. Source mode intentionally shows raw syntax.
-
-## Automatic paste repair
-
-Enabled by default. Disable **Fix LaTeX on paste** in the plugin settings if desired. When conversion is needed, the plugin inserts plain-text Markdown from the clipboard, so rich clipboard formatting is not retained. Images, file pastes, multiple-cursor pastes, and pastes already handled by another plugin are left alone. Existing text elsewhere in the note is not changed by pasting.
-
-## Install or update manually
-
-1. Download `main.js` and `manifest.json` from the [latest release](https://github.com/Ayush4265/latex-delimiter-fix/releases/latest), or extract the plugin ZIP.
-2. Put them in `<your vault>/.obsidian/plugins/latex-delimiter-fix/`. When updating, replace the existing files.
-3. Restart/reload Obsidian, then enable **LaTeX Delimiter Fix** in **Settings > Community plugins**. For an update, toggling the plugin off and on also reloads it.
-
-Requires Obsidian 1.5.0 or later. No build step is needed for installation.
-
-## Example
-
-Before:
-
-```text
-\[\text{Sequence} = \text{First} \longrightarrow \text{Next} \longrightarrow \text{Last}\]
-```
-
-After:
-
-```text
-$$
-\text{Sequence} = \text{First} \longrightarrow \text{Next} \longrightarrow \text{Last}
-$$
-```
-
-The converter also handles standalone display blocks in basic quotes and lists, and display math embedded in ordinary prose by separating it into a block.
-
-## What stays unchanged
-
-The converter skips fenced and indented code, matched inline code, YAML properties, HTML/Obsidian comments, HTML `code`/`pre` blocks, wiki links, Markdown link destinations, and existing matched dollar-delimited math (except repairing numeric percentages such as `$75%# LaTeX Delimiter Fix
-
-Repair unrendered LaTeX math in **existing notes**, selected text, and future pastes. Converts `\[ ... \]` to Obsidian display math (`$$`) and `\( ... \)` to inline math (`$`). This is an independent community plugin.
-
-## Repair existing text
-
-No need to copy and paste the note again:
-
-- Click the **sigma (Σ) ribbon icon**, labelled **Fix math in current note**.
-- Or open the command palette and run **LaTeX Delimiter Fix: Repair math in current note**.
-- Or right-click in the editor and choose **Fix math in current note**.
-- For a passage, select it and run **Repair math in selection** or use the editor context menu.
-- The plugin settings also have a **Fix math** button.
-
-The current-note command works in editing mode and Reading view. Only the active note is repaired. Selection repair only changes complete expressions fully inside a selection and checks the surrounding note for code/math context.
-
-In editing mode, use **Undo** to reverse a repair. In Reading view, use **LaTeX Delimiter Fix: Revert last note repair**. The latter stores one repair in memory for the current session and refuses to revert if the note has changed. It is not a persistent backup or vault history.
-
-Use Reading view or Live Preview with your cursor outside the equation to see rendered math. Source mode intentionally shows raw syntax.
-
-## Automatic paste repair
-
-Enabled by default. Disable **Fix LaTeX on paste** in the plugin settings if desired. When conversion is needed, the plugin inserts plain-text Markdown from the clipboard, so rich clipboard formatting is not retained. Images, file pastes, multiple-cursor pastes, and pastes already handled by another plugin are left alone. Existing text elsewhere in the note is not changed by pasting.
-
-## Install or update manually
-
-1. Download `main.js` and `manifest.json` from the [latest release](https://github.com/Ayush4265/latex-delimiter-fix/releases/latest), or extract the plugin ZIP.
-2. Put them in `<your vault>/.obsidian/plugins/latex-delimiter-fix/`. When updating, replace the existing files.
-3. Restart/reload Obsidian, then enable **LaTeX Delimiter Fix** in **Settings > Community plugins**. For an update, toggling the plugin off and on also reloads it.
-
-Requires Obsidian 1.5.0 or later. No build step is needed for installation.
-
-## Example
-
-Before:
-
-```text
-\[\text{Sequence} = \text{First} \longrightarrow \text{Next} \longrightarrow \text{Last}\]
-```
-
-After:
-
-```text
-$$
-\text{Sequence} = \text{First} \longrightarrow \text{Next} \longrightarrow \text{Last}
-$$
-```
-
-The converter also handles standalone display blocks in basic quotes and lists, and display math embedded in ordinary prose by separating it into a block.
-
-## What stays unchanged
-
-The converter skips fenced and indented code, matched inline code, YAML properties, HTML/Obsidian comments, HTML `code`/`pre` blocks, wiki links, Markdown link destinations,  to `$75\%# LaTeX Delimiter Fix
-
-Repair unrendered LaTeX math in **existing notes**, selected text, and future pastes. Converts `\[ ... \]` to Obsidian display math (`$$`) and `\( ... \)` to inline math (`$`). This is an independent community plugin.
-
-## Repair existing text
-
-No need to copy and paste the note again:
-
-- Click the **sigma (Σ) ribbon icon**, labelled **Fix math in current note**.
-- Or open the command palette and run **LaTeX Delimiter Fix: Repair math in current note**.
-- Or right-click in the editor and choose **Fix math in current note**.
-- For a passage, select it and run **Repair math in selection** or use the editor context menu.
-- The plugin settings also have a **Fix math** button.
-
-The current-note command works in editing mode and Reading view. Only the active note is repaired. Selection repair only changes complete expressions fully inside a selection and checks the surrounding note for code/math context.
-
-In editing mode, use **Undo** to reverse a repair. In Reading view, use **LaTeX Delimiter Fix: Revert last note repair**. The latter stores one repair in memory for the current session and refuses to revert if the note has changed. It is not a persistent backup or vault history.
-
-Use Reading view or Live Preview with your cursor outside the equation to see rendered math. Source mode intentionally shows raw syntax.
-
-## Automatic paste repair
-
-Enabled by default. Disable **Fix LaTeX on paste** in the plugin settings if desired. When conversion is needed, the plugin inserts plain-text Markdown from the clipboard, so rich clipboard formatting is not retained. Images, file pastes, multiple-cursor pastes, and pastes already handled by another plugin are left alone. Existing text elsewhere in the note is not changed by pasting.
-
-## Install or update manually
-
-1. Download `main.js` and `manifest.json` from the [latest release](https://github.com/Ayush4265/latex-delimiter-fix/releases/latest), or extract the plugin ZIP.
-2. Put them in `<your vault>/.obsidian/plugins/latex-delimiter-fix/`. When updating, replace the existing files.
-3. Restart/reload Obsidian, then enable **LaTeX Delimiter Fix** in **Settings > Community plugins**. For an update, toggling the plugin off and on also reloads it.
-
-Requires Obsidian 1.5.0 or later. No build step is needed for installation.
-
-## Example
-
-Before:
-
-```text
-\[\text{Sequence} = \text{First} \longrightarrow \text{Next} \longrightarrow \text{Last}\]
-```
-
-After:
-
-```text
-$$
-\text{Sequence} = \text{First} \longrightarrow \text{Next} \longrightarrow \text{Last}
-$$
-```
-
-The converter also handles standalone display blocks in basic quotes and lists, and display math embedded in ordinary prose by separating it into a block.
-
-## What stays unchanged
-
-The converter skips fenced and indented code, matched inline code, YAML properties, HTML/Obsidian comments, HTML `code`/`pre` blocks, wiki links, Markdown link destinations, ). An expression cannot cross a protected region. Incomplete pairs are left alone. TeX content is preserved apart from whitespace at expression edges and container prefixes.
-
-## Limits
-
-. A bare `%` starts a TeX comment and can swallow subsequent Markdown. The same correction applies to existing dollar math from older versions. Multiline explanatory TeX comments are retained. Other invalid TeX and missing LaTeX packages require manual repair. Long equations may still need manual line breaks. Inline expressions must close on the same line. Display expressions spanning blank paragraphs, table cells, complex nested Markdown, or mixed prose within list/quote containers may be skipped. Literal paired delimiters in ordinary prose are indistinguishable from intended math; review repairs and use Undo if necessary.
-
-The converter is a conservative source scanner rather than a full Markdown parser. Automated tests cover the original long-form equation, existing notes, Reading view/revert, selections, clipboard context, protected regions, malformed input, and repeated repairs. Tests use a mocked Obsidian API; this release was not manually exercised in a running Obsidian instance during development. Mobile uses only public Obsidian and standard JavaScript APIs, but on-device testing remains outstanding.
+95 automated tests cover conversion, percentage regressions, nested italic/bold lists, list/code boundaries, note/selection/paste operations, Reading view/revert, malformed input, and repeat runs. Tests use a mocked Obsidian API. The reported nested-list case was checked against a local note copy while verifying its 28 fenced blocks stayed unchanged. Live desktop/mobile rendering testing remains outstanding.
 
 ## Privacy
 
-Runs locally. No network calls, telemetry, account, API key, remote code, external dependencies, or access outside the vault. Only explicit repairs and handled paste events change note content. All event handlers are registered with Obsidian for cleanup when the plugin unloads.
+Runs locally with no network calls, telemetry, account, API key, downloaded code, or access outside the vault. Only explicit repairs and handled paste events change notes. Event handlers are registered with Obsidian for cleanup on unload.
 
-## Development
+## Development and releases
 
-Requires Node.js 20 or later, with no third-party build or test dependencies:
+Requires Node.js 20 or later. There are no third-party build/test dependencies.
 
 ```sh
 node build.cjs
@@ -338,9 +75,6 @@ node --check main.js
 node --test test/*.test.cjs
 ```
 
-Edit `src/math.js` or `src/main.js`, then rebuild. `main.js` is the readable generated runtime bundle. The GitHub release tag must match the version in `manifest.json` exactly, without a `v` prefix; attach `main.js` and `manifest.json` as individual release assets.
+Edit `src/math.js` or `src/main.js`, then rebuild the readable runtime bundle `main.js`. GitHub Actions tests manifest updates and publishes a release whose tag matches the manifest version exactly, without a `v` prefix. Obsidian installs the individual `main.js` and `manifest.json` release assets.
 
 Licensed under [MIT](LICENSE).
-
-Author: **Atharva Savnerkar** ([Ayush4265](https://github.com/Ayush4265)).
-

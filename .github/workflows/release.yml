@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - manifest.json
+      - README.md
       - .github/workflows/release.yml
   workflow_dispatch:
 permissions:
@@ -29,13 +30,19 @@ jobs:
         run: |
           set -euo pipefail
           VERSION=$(node -e 'const v=require("./manifest.json").version;if(!/^\d+\.\d+\.\d+$/.test(v))process.exit(1);process.stdout.write(v)')
-          if gh release view "$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo "Release $VERSION already exists; leaving it unchanged."
-            exit 0
-          fi
           mkdir -p release/latex-delimiter-fix
           cp main.js manifest.json README.md LICENSE release/latex-delimiter-fix/
           (cd release && zip -r "latex-delimiter-fix-$VERSION.zip" latex-delimiter-fix)
+          if gh release view "$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            # Refresh only the documentation ZIP when the runtime is unchanged.
+            # Never rewrite published runtime assets or move an existing tag.
+            mkdir -p verify
+            gh release download "$VERSION" --repo "$GITHUB_REPOSITORY" --pattern main.js --pattern manifest.json --dir verify
+            cmp main.js verify/main.js
+            cmp manifest.json verify/manifest.json
+            gh release upload "$VERSION" "release/latex-delimiter-fix-$VERSION.zip" --repo "$GITHUB_REPOSITORY" --clobber
+            exit 0
+          fi
           gh release create "$VERSION" main.js manifest.json "release/latex-delimiter-fix-$VERSION.zip" \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
